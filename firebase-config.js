@@ -1,2 +1,13 @@
-// הגדרות Firebase – ימולאו בשלב החיבור (Project settings → Your apps → Web app → firebaseConfig)
-window.FIREBASE_CONFIG = null;
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['myrons1983@gmail.com'];
+    }
+    match /{document=**} {
+      allow read, write: if allowed();
+    }
+  }
+}
