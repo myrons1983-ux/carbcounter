@@ -1,5 +1,5 @@
 // CarbCounter service worker – שומר את קבצי האפליקציה לעבודה בלי רשת
-const CACHE = 'carbcounter-v3';
+const CACHE = 'carbcounter-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './firebase-config.js', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -18,6 +18,13 @@ self.addEventListener('fetch', e => {
   const sameOrigin = url.origin === self.location.origin;
   const isStatic = url.hostname === 'www.gstatic.com' || url.hostname.startsWith('fonts.');
   if (!sameOrigin && !isStatic) return;
+  if (sameOrigin && url.pathname.endsWith('firebase-config.js')) {
+    // הגדרות הענן – תמיד קודם מהרשת, כדי לא להיתקע עם גרסה ישנה
+    e.respondWith(fetch(req, { cache: 'no-store' }).then(res => {
+      const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
+    }).catch(() => caches.match(req)));
+    return;
+  }
   if (sameOrigin) {
     // קודם מהמטמון (פתיחה מהירה), ובמקביל עדכון מהרשת לפעם הבאה
     const net = fetch(req).then(res => {
